@@ -7,10 +7,6 @@ import zipfile
 from bs4 import BeautifulSoup
 import re
 
-VIDEO_REGEX_search = r"(?P<video_url>^http[s]?://www\.youtube\.com/results\?search_query=\S+)"
-VIDEO_REGEX = r"(?P<video_url>^http[s]?://www\.youtube\.com/watch\?v=[a-z,A-Z,0-9,\-,_]+)(?P<rest>$|&.*)"
-CHANNEL_REGEX = r"(?P<channel_url>^http[s]?://www\.youtube\.com/channel/[a-z,A-Z,0-9,\-,_]+$)"
-
 # 
 def process(sessionId):
     yield donate(f"{sessionId}-tracking", '[{ "message": "user entered script" }]')
@@ -59,7 +55,7 @@ def process(sessionId):
         progress += step_percentage
         if data is not None:
             meta_data.append(("debug", f"{platform}: prompt consent"))
-            prompt = prompt_consent(platform, data, meta_data)
+            prompt = prompt_consent(platform, data)
             consent_result = yield render_donation_page(platform, prompt, progress)
             if consent_result.__type__ == "PayloadJSON":
                 meta_data.append(("debug", f"{platform}: donate consent data"))
@@ -184,6 +180,9 @@ def extract_zip_contents(filename):
 
 # extract video url data from searching and viewing files
 def extract_data_file_videos(files,name,type):
+    VIDEO_REGEX_search = r"(?P<video_url>^http[s]?://www\.youtube\.com/results\?search_query=\S+)"
+    VIDEO_REGEX = r"(?P<video_url>^http[s]?://www\.youtube\.com/watch\?v=[a-z,A-Z,0-9,\-,_]+)(?P<rest>$|&.*)"
+    CHANNEL_REGEX = r"(?P<channel_url>^http[s]?://www\.youtube\.com/channel/[a-z,A-Z,0-9,\-,_]+$)"
     data_set_search = []
     if type == 1 or type == 2:
         file = files.open(name, 'r') 
@@ -239,7 +238,7 @@ def csv_extract(files,name,type):
 
 
 
-def prompt_consent(id, data, meta_data):
+def prompt_consent(id, data):
 
     table_title_search = props.Translatable({
         "en": "search data",
@@ -256,17 +255,29 @@ def prompt_consent(id, data, meta_data):
         "en": "subscription data",
         "nl": "Log berichten"
     })
+
+    
+    # table_title_likes = props.Translatable({
+    #     "en": "likes data",
+    #     "nl": "Log berichten"
+    # })
+
     # I made some changes here, just for column names
     data_frame_search = pd.DataFrame(data[0],columns=['Time', 'title','Video url'])
-    table_s = props.PropsUIPromptConsentFormTable("zip_content", table_title_search, data_frame_search)
+    table_s = props.PropsUIPromptConsentFormTable("search_content", table_title_search, data_frame_search)
 
     # viewing data
-    data_frame_viewing = pd.DataFrame(data[1], columns=["time", "ads",'title','video_url','channel_title','channel_url','likes'])
-    table_v = props.PropsUIPromptConsentFormTable("log_messages", table_title_viewings, data_frame_viewing)
+    # a werid bug pops up if i add columns names
+    data_frame_viewing = pd.DataFrame(data[1])
+    table_v = props.PropsUIPromptConsentFormTable("viewing_content", table_title_viewings, data_frame_viewing)
 
     # subscritpion data
     data_frame_subscription = pd.DataFrame(data[2], columns=["channel_id", "channel_url","channel_title"])
-    table_sub = props.PropsUIPromptConsentFormTable("log_messages", table_title_subscription, data_frame_subscription)
+    table_sub = props.PropsUIPromptConsentFormTable("subscription_content", table_title_subscription, data_frame_subscription)
+
+    # # like data
+    # data_frame_likes = pd.DataFrame(data[2], columns=["channel_id", "channel_url","channel_title"])
+    # table_likes = props.PropsUIPromptConsentFormTable("subscription_content", table_title_likes, data_frame_likes)
 
     return props.PropsUIPromptConsentForm([table_s,table_v,table_sub], [])
 
