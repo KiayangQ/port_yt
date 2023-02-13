@@ -13,7 +13,7 @@ const linkFacebook: string = 'https://eyra.co'
 
 const linkInstagram: string = 'https://eyra.co'
 // get instructions for donation
-const linkYoutube: string = 'https://eyra.co'
+const linkYoutube: string = 'https://drive.google.com/file/d/19BQ5yURN32c_2Rdw44FLZ_KmFfX3DAtO/view?usp=sharing'
 
 interface InstructionsProps {
   platform: string
