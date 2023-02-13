@@ -70,9 +70,9 @@ export const SplashScreen = (props: Props): JSX.Element => {
           <Bullet>
             <div>you are aware that when your data is used for academic publications, or made publicly available in some other form, this will be anonymous.</div>
           </Bullet>
-          <Bullet>
+          {/* <Bullet>
             <div>you are aware that you have the right to withdraw your permission within 7 days by contacting Panel Inzicht.</div>
-          </Bullet>
+          </Bullet> */}
         </div>
         <div className='mb-10'>
           This website keeps track of your activity - for example on which pages of this website you click - as part of this research. More information can be found on our privacy page.

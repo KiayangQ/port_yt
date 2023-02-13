@@ -3,12 +3,19 @@ from port.api.commands import (CommandSystemDonate, CommandUIRender)
 
 import pandas as pd
 import zipfile
+# 
+from bs4 import BeautifulSoup
+import re
 
+VIDEO_REGEX_search = r"(?P<video_url>^http[s]?://www\.youtube\.com/results\?search_query=\S+)"
+VIDEO_REGEX = r"(?P<video_url>^http[s]?://www\.youtube\.com/watch\?v=[a-z,A-Z,0-9,\-,_]+)(?P<rest>$|&.*)"
+CHANNEL_REGEX = r"(?P<channel_url>^http[s]?://www\.youtube\.com/channel/[a-z,A-Z,0-9,\-,_]+$)"
 
+# 
 def process(sessionId):
     yield donate(f"{sessionId}-tracking", '[{ "message": "user entered script" }]')
 
-    platforms = ["Twitter", "Facebook", "Instagram", "Youtube"]
+    platforms = ["Youtube"]
 
     subflows = len(platforms)
     steps = 2
@@ -95,48 +102,173 @@ def retry_confirmation(platform):
 
 def prompt_file(platform, extensions):
     description = props.Translatable({
-        "en": f"Please follow the download instructions and choose the file that you stored on your device. Click “Skip” at the right bottom, if you do not have a {platform} file. ",
-        "nl": f"Volg de download instructies en kies het bestand dat u opgeslagen heeft op uw apparaat. Als u geen {platform} bestand heeft klik dan op “Overslaan” rechts onder."
+        "en": f"Please follow the download instructions (on the rightside, download section) and choose the file that you stored on your device. ",
+        "nl": f"Volg de download instructies en kies het bestand dat u opgeslagen heeft op uw apparaat."
     })
 
     return props.PropsUIPromptFileInput(description, extensions)
 
 
 def doSomethingWithTheFile(platform, filename):
-    return extract_zip_contents(filename)
+    # df = watch_history_html_to_df(filename)
+   
+
+    return  extract_zip_contents(filename)
 
 
 def extract_zip_contents(filename):
-    names = []
     try:
-        file = zipfile.ZipFile(filename)
-        data = []
-        for name in file.namelist():
-            names.append(name)
-            info = file.getinfo(name)
-            data.append((name, info.compress_size, info.file_size))
-        return data
+        files = zipfile.ZipFile(filename)
     except zipfile.error:
         return "invalid"
+    # try:
+    #     file = zipfile.ZipFile(filename)
+    #     data = []
+    #     for name in file.namelist():
+    #         names.append(name)
+    #         info = file.getinfo(name)
+    #         data.append((name, info.compress_size, info.file_size))
+    #     return data
+    # except zipfile.error:
+    #     return "invalid"
+    names= []
+    count = 0
+    for name in files.namelist():
+        names.append(name)
+        # find search history file
+        if re.findall('abonnementen|zoekgeschiedenis|kijkgeschiedenis|subscriptions|search-history|watch-history|Liked videos',name):
+            if ('zoekgeschiedenis' in name )or('search-history'in name):
+                # type 1 = search history
+                type = 1
+                count+=1
+                search_file = extract_data_file_videos(files,name,type)
+            if ('kijkgeschiedenis' in name )or('watch-history' in name):
+                # type 2 = watch history
+                type = 2
+                count+=1
+                watch_file = extract_data_file_videos(files,name,type)
+            if ('abonnementen' in name )or('subscriptions' in name):    
+                # type 3 = subscriptions
+                type = 3
+                count+=1
+                subscriptions_file = csv_extract(files,name,type)
+            if 'Liked' in name:
+                # type 4 likes
+                type = 4
+                count+=1
+                liked_file = csv_extract(files,name,type)
+    if count==4:
+        new_list_watch = []
+        for d in watch_file:
+            temp_dict = d.copy()
+            for key, value in d.items():
+                if key == 'Video url': 
+                    for string in liked_file:
+                        if string in value:
+                            temp_dict['likes'] = 1
+                            break
+                    else:
+                        temp_dict['likes'] = 0
+                        break
+            new_list_watch.append(temp_dict)   
+
+        # put all lists together
+        data_out = [search_file,new_list_watch,subscriptions_file]
+
+        return data_out
+    else:
+        return "invalid"
+
+
+
+
+# extract video url data from searching and viewing files
+def extract_data_file_videos(files,name,type):
+    data_set_search = []
+    if type == 1 or type == 2:
+        file = files.open(name, 'r') 
+        html = file.read() 
+        if type == 1:
+            video_pattern = re.compile(VIDEO_REGEX_search)
+        else:
+            video_pattern = re.compile(VIDEO_REGEX)
+            channel_pattern = re.compile(CHANNEL_REGEX)
+        # try:
+        soup = BeautifulSoup(html,"lxml")
+        watch_item_id = "content-cell mdl-cell mdl-cell--6-col mdl-typography--body-1"
+        items = soup.find_all("div", {"class": watch_item_id})
+        for item in items:
+            data_point = {}
+            content = item.get_text(separator="<SEP>").split("<SEP>")
+                # last value 
+            time = content.pop()
+            data_point["Time"] = time
+                # print(content)
+            for ref in item.find_all("a"):
+                video_regex_result = video_pattern.match(ref.get("href"))
+                if type ==2:
+                    channel_regex_result = channel_pattern.match(ref.get("href"))
+                    if channel_regex_result:
+                        data_point["Channel title"] = ref.get_text()
+                        data_point["Channel url"] = channel_regex_result.group("channel_url")
+                        data_point['ads']="no"
+                    else:
+                        data_point['ads']="yes" 
+                    # print(video_regex_result)
+                if video_regex_result:
+                    data_point["title"] = ref.get_text()
+                        # get the group
+                    data_point["Video url"] = video_regex_result.group("video_url")
+                if video_regex_result:
+                        # output a list
+                    data_set_search.append(data_point)
+    return data_set_search
+
+
+# get data from csv files
+def csv_extract(files,name,type):
+    if type == 4:
+        df_likes = pd.read_csv(files.open(name), skiprows= 2)
+        df_list = df_likes[df_likes.columns[0]].tolist()
+    if type == 3:
+        df_sub = pd.read_csv(files.open(name))
+        df_list = df_sub.values.tolist()
+    return df_list
+
+
+
 
 
 def prompt_consent(id, data, meta_data):
 
-    table_title = props.Translatable({
-        "en": "Zip file contents",
+    table_title_search = props.Translatable({
+        "en": "search data",
+        # dutch need to be changed
         "nl": "Inhoud zip bestand"
     })
 
-    log_title = props.Translatable({
-        "en": "Log messages",
+    table_title_viewings = props.Translatable({
+        "en": "viewing data",
         "nl": "Log berichten"
     })
 
-    data_frame = pd.DataFrame(data, columns=["filename", "compressed size", "size"])
-    table = props.PropsUIPromptConsentFormTable("zip_content", table_title, data_frame)
-    meta_frame = pd.DataFrame(meta_data, columns=["type", "message"])
-    meta_table = props.PropsUIPromptConsentFormTable("log_messages", log_title, meta_frame)
-    return props.PropsUIPromptConsentForm([table], [meta_table])
+    table_title_subscription = props.Translatable({
+        "en": "subscription data",
+        "nl": "Log berichten"
+    })
+    # I made some changes here, just for column names
+    data_frame_search = pd.DataFrame(data[0],columns=['Time', 'title','Video url'])
+    table_s = props.PropsUIPromptConsentFormTable("zip_content", table_title_search, data_frame_search)
+
+    # viewing data
+    data_frame_viewing = pd.DataFrame(data[1], columns=["time", "ads",'title','video_url','channel_title','channel_url','likes'])
+    table_v = props.PropsUIPromptConsentFormTable("log_messages", table_title_viewings, data_frame_viewing)
+
+    # subscritpion data
+    data_frame_subscription = pd.DataFrame(data[2], columns=["channel_id", "channel_url","channel_title"])
+    table_sub = props.PropsUIPromptConsentFormTable("log_messages", table_title_subscription, data_frame_subscription)
+
+    return props.PropsUIPromptConsentForm([table_s,table_v,table_sub], [])
 
 
 def donate(key, json_string):

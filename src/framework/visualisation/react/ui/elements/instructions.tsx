@@ -10,7 +10,9 @@ import { Bullet } from './bullet'
 
 const linkTwitter: string = 'https://eyra.co'
 const linkFacebook: string = 'https://eyra.co'
+
 const linkInstagram: string = 'https://eyra.co'
+// get instructions for donation
 const linkYoutube: string = 'https://eyra.co'
 
 interface InstructionsProps {
@@ -33,8 +35,8 @@ export const Instructions = (props: Props): JSX.Element => {
     return (
       <>
         <div className='flex flex-col gap-4 text-bodymedium font-body text-grey2'>
-          {renderBullets(bullets[platform][locale])}
           {links[platform][locale]}
+          {renderBullets(bullets[platform][locale])}
         </div>
       </>
     )
@@ -145,7 +147,7 @@ const bullets: Record<string, Record<string, string[]>> = {
 }
 
 function linkEn (link: string): JSX.Element {
-  return <div>Click <span className='text-primary underline'><a href={link} target='_blank' rel='noreferrer'>here</a></span> for more extensive instructions</div>
+  return <div>Click <span className='text-primary underline'><a href={link} target='_blank' rel='noreferrer'>here</a></span> for more extensive instructions(a pdf file)</div>
 }
 
 function linkNl (link: string): JSX.Element {
