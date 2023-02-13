@@ -102,8 +102,8 @@ def retry_confirmation(platform):
 
 def prompt_file(platform, extensions):
     description = props.Translatable({
-        "en": f"Please follow the download instructions (on the rightside, download section) and choose the file that you stored on your device. ",
-        "nl": f"Volg de download instructies en kies het bestand dat u opgeslagen heeft op uw apparaat."
+        "en": f"Please follow the download instructions (on the rightside, download section) and choose the file that you stored on your device. It may take around 30 seconds to process your data.",
+        "nl": f"Volg de downloadinstructies (aan de rechterkant, downloadsectie) en kies het bestand dat u op uw apparaat hebt opgeslagen. Et kan ongeveer 30 seconden duren om uw gegevens te verwerken."
     })
 
     return props.PropsUIPromptFileInput(description, extensions)
