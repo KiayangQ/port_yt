@@ -6,7 +6,7 @@ import { Translatable } from '../../../../types/elements'
 import { PropsUIPageDonation } from '../../../../types/pages'
 import { isPropsUIPromptConfirm, isPropsUIPromptConsentForm, isPropsUIPromptFileInput } from '../../../../types/prompts'
 import { ReactFactoryContext } from '../../factory'
-import { ForwardButton } from '../elements/button'
+// import { ForwardButton } from '../elements/button'
 import { Title1 } from '../elements/text'
 import { Confirm } from '../prompts/confirm'
 import { ConsentForm } from '../prompts/consent_form'
@@ -21,8 +21,8 @@ import { Instructions } from '../elements/instructions'
 type Props = Weak<PropsUIPageDonation> & ReactFactoryContext
 
 export const DonationPage = (props: Props): JSX.Element => {
-  const { title, forwardButton } = prepareCopy(props)
-  const { platform, locale, resolve } = props
+  const { title } = prepareCopy(props)
+  const { platform, locale } = props
 
   function renderBody (props: Props): JSX.Element {
     const context = { locale: locale, resolve: props.resolve }
@@ -39,9 +39,9 @@ export const DonationPage = (props: Props): JSX.Element => {
     throw new TypeError('Unknown body type')
   }
 
-  function handleSkip (): void {
-    resolve?.({ __type__: 'PayloadFalse', value: false })
-  }
+  // function handleSkip (): void {
+  //   resolve?.({ __type__: 'PayloadFalse', value: false })
+  // }
 
   const footer: JSX.Element = (
     <Footer
@@ -49,7 +49,7 @@ export const DonationPage = (props: Props): JSX.Element => {
       right={
         <div className='flex flex-row'>
           <div className='flex-grow' />
-          <ForwardButton label={forwardButton} onClick={handleSkip} />
+          {/* <ForwardButton label={forwardButton} onClick={handleSkip} /> */}
         </div>
       }
     />
@@ -94,6 +94,6 @@ function prepareCopy ({ header: { title }, locale }: Props): Copy {
 
 const forwardButtonLabel = (): Translatable => {
   return new TextBundle()
-    .add('en', 'Skip')
-    .add('nl', 'Overslaan')
+    .add('en', '')
+    .add('nl', '')
 }

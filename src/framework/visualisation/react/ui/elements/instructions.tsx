@@ -147,11 +147,11 @@ const bullets: Record<string, Record<string, string[]>> = {
 }
 
 function linkEn (link: string): JSX.Element {
-  return <div>Click <span className='text-primary underline'><a href={link} target='_blank' rel='noreferrer'>here</a></span> for more extensive instructions(a pdf file)</div>
+  return <div>Click <span className='text-primary underline'><a href={link} target='_blank' rel='noreferrer'>here</a></span> for more extensive instructions (a pdf file)</div>
 }
 
 function linkNl (link: string): JSX.Element {
-  return <div>Klik <span className='text-primary underline'><a href={link} target='_blank' rel='noreferrer'>hier</a></span> voor uitgebreidere instructies</div>
+  return <div>Klik <span className='text-primary underline'><a href={link} target='_blank' rel='noreferrer'>hier</a></span> voor uitgebreidere instructies (een pdf-bestand)</div>
 }
 
 const links: Record<string, Record<string, JSX.Element>> = {

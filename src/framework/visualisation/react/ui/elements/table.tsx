@@ -39,8 +39,8 @@ interface State {
   deletedCount: number
   visibility: Visibility
 }
-
-export const Table = ({ id, head, body, readOnly = false, pageSize = 7, locale, onChange }: Props): JSX.Element => {
+// table size
+export const Table = ({ id, head, body, readOnly = false, pageSize = 20, locale, onChange }: Props): JSX.Element => {
   const pageWindowLegSize = 3
 
   const query = React.useRef<string[]>([])

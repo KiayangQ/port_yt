@@ -1,11 +1,13 @@
 import port.api.props as props
 from port.api.commands import (CommandSystemDonate, CommandUIRender)
 
+
 import pandas as pd
 import zipfile
 # 
-from bs4 import BeautifulSoup
+from lxml import etree 
 import re
+
 
 # 
 def process(sessionId):
@@ -82,8 +84,8 @@ def render_donation_page(platform, body, progress):
 
 def retry_confirmation(platform):
     text = props.Translatable({
-        "en": f"Unfortunately, we cannot process your {platform} file. Continue, if you are sure that you selected the right file. Try again to select a different file.",
-        "nl": f"Helaas, kunnen we uw {platform} bestand niet verwerken. Weet u zeker dat u het juiste bestand heeft gekozen? Ga dan verder. Probeer opnieuw als u een ander bestand wilt kiezen."
+        "en": f"Unfortunately, we cannot process your {platform} file. Try again and select the correct file. The zipped file is often named as takeout-xxxxx.zip",
+        "nl": f"Helaas, kunnen we uw {platform} bestand niet verwerken. Probeer het opnieuw en selecteer het juiste bestand. Het gecomprimeerde bestand wordt vaak genoemd als takeout-xxxxx.zip."
     })
     ok = props.Translatable({
         "en": "Try again",
@@ -98,8 +100,8 @@ def retry_confirmation(platform):
 
 def prompt_file(platform, extensions):
     description = props.Translatable({
-        "en": f"Please follow the download instructions (on the rightside, download section) and choose the file that you stored on your device. It may take around 30 seconds to process your data.",
-        "nl": f"Volg de downloadinstructies (aan de rechterkant, downloadsectie) en kies het bestand dat u op uw apparaat hebt opgeslagen. Et kan ongeveer 30 seconden duren om uw gegevens te verwerken."
+        "en": f"Please follow the download instructions (on the rightside, download section) and choose the file that you stored on your device.",
+        "nl": f"Volg de downloadinstructies (aan de rechterkant, downloadsectie) en kies het bestand dat u op uw apparaat hebt opgeslagen."
     })
 
     return props.PropsUIPromptFileInput(description, extensions)
@@ -117,16 +119,6 @@ def extract_zip_contents(filename):
         files = zipfile.ZipFile(filename)
     except zipfile.error:
         return "invalid"
-    # try:
-    #     file = zipfile.ZipFile(filename)
-    #     data = []
-    #     for name in file.namelist():
-    #         names.append(name)
-    #         info = file.getinfo(name)
-    #         data.append((name, info.compress_size, info.file_size))
-    #     return data
-    # except zipfile.error:
-    #     return "invalid"
     names= []
     count = 0
     for name in files.namelist():
@@ -179,50 +171,44 @@ def extract_zip_contents(filename):
 
 
 # extract video url data from searching and viewing files
-def extract_data_file_videos(files,name,type):
+
+def extract_data_file_videos(files, name, type):
     VIDEO_REGEX_search = r"(?P<video_url>^http[s]?://www\.youtube\.com/results\?search_query=\S+)"
     VIDEO_REGEX = r"(?P<video_url>^http[s]?://www\.youtube\.com/watch\?v=[a-z,A-Z,0-9,\-,_]+)(?P<rest>$|&.*)"
     CHANNEL_REGEX = r"(?P<channel_url>^http[s]?://www\.youtube\.com/channel/[a-z,A-Z,0-9,\-,_]+$)"
     data_set_search = []
     if type == 1 or type == 2:
-        file = files.open(name, 'r') 
-        html = file.read() 
+        with files.open(name, 'r') as f:
+            html = f.read()
+        parser = etree.HTMLParser(encoding="utf-8")
+        tree = etree.fromstring(html, parser)
         if type == 1:
             video_pattern = re.compile(VIDEO_REGEX_search)
         else:
             video_pattern = re.compile(VIDEO_REGEX)
             channel_pattern = re.compile(CHANNEL_REGEX)
-        # try:
-        soup = BeautifulSoup(html,"lxml")
-        watch_item_id = "content-cell mdl-cell mdl-cell--6-col mdl-typography--body-1"
-        items = soup.find_all("div", {"class": watch_item_id})
+        items = tree.xpath('//div[contains(@class, "content-cell") and contains(@class, "mdl-cell") and contains(@class, "mdl-cell--6-col") and contains(@class, "mdl-typography--body-1")]')
         for item in items:
             data_point = {}
-            content = item.get_text(separator="<SEP>").split("<SEP>")
-                # last value 
+            content = item.xpath('string()').strip().split("<SEP>")
             time = content.pop()
             data_point["Time"] = time
-                # print(content)
-            for ref in item.find_all("a"):
+            for ref in item.xpath('.//a'):
                 video_regex_result = video_pattern.match(ref.get("href"))
-                if type ==2:
+                if type == 2:
                     channel_regex_result = channel_pattern.match(ref.get("href"))
                     if channel_regex_result:
-                        data_point["Channel title"] = ref.get_text()
+                        data_point["Channel title"] = ref.xpath('string()')
                         data_point["Channel url"] = channel_regex_result.group("channel_url")
                         data_point['ads']="no"
                     else:
                         data_point['ads']="yes" 
-                    # print(video_regex_result)
                 if video_regex_result:
-                    data_point["title"] = ref.get_text()
-                        # get the group
+                    data_point["title"] = ref.xpath('string()')
                     data_point["Video url"] = video_regex_result.group("video_url")
-                if video_regex_result:
-                        # output a list
-                    data_set_search.append(data_point)
+            if "Video url" in data_point:
+                data_set_search.append(data_point)
     return data_set_search
-
 
 # get data from csv files
 def csv_extract(files,name,type):
@@ -233,6 +219,7 @@ def csv_extract(files,name,type):
         df_sub = pd.read_csv(files.open(name))
         df_list = df_sub.values.tolist()
     return df_list
+
 
 
 
