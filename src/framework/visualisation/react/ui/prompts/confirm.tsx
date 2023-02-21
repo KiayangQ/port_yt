@@ -9,15 +9,15 @@ type Props = Weak<PropsUIPromptConfirm> & ReactFactoryContext
 
 export const Confirm = (props: Props): JSX.Element => {
   const { resolve } = props
-  const { text, ok, cancel } = prepareCopy(props)
+  const { text, ok } = prepareCopy(props)
 
   function handleOk (): void {
     resolve?.({ __type__: 'PayloadTrue', value: true })
   }
 
-  function handleCancel (): void {
-    resolve?.({ __type__: 'PayloadFalse', value: false })
-  }
+  // function handleCancel (): void {
+  //   resolve?.({ __type__: 'PayloadFalse', value: false })
+  // }
 
   return (
     <>

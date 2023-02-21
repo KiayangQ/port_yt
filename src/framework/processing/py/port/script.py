@@ -84,8 +84,8 @@ def render_donation_page(platform, body, progress):
 
 def retry_confirmation(platform):
     text = props.Translatable({
-        "en": f"Unfortunately, we cannot process your {platform} file. Try again and select the correct file. The zipped file is often named as takeout-xxxxx.zip",
-        "nl": f"Helaas, kunnen we uw {platform} bestand niet verwerken. Probeer het opnieuw en selecteer het juiste bestand. Het gecomprimeerde bestand wordt vaak genoemd als takeout-xxxxx.zip."
+        "en": f"Unfortunately, Your data package does not contain the files we need or we cannot process your {platform} file. Try again or select the correct file. The zipped file is often named as takeout-xxxxx.zip",
+        "nl": f"Helaas, Uw datapakket bevat niet de bestanden die we nodig hebben of kunnen we uw {platform} bestand niet verwerken. Probeer het opnieuw of selecteer het juiste bestand. Het gecomprimeerde bestand wordt vaak genoemd als takeout-xxxxx.zip."
     })
     ok = props.Translatable({
         "en": "Try again",
@@ -178,8 +178,12 @@ def extract_data_file_videos(files, name, type):
     CHANNEL_REGEX = r"(?P<channel_url>^http[s]?://www\.youtube\.com/channel/[a-z,A-Z,0-9,\-,_]+$)"
     data_set_search = []
     if type == 1 or type == 2:
-        with files.open(name, 'r') as f:
-            html = f.read()
+        try:
+            with files.open(name, 'r') as f:
+                html = f.read()
+        except Exception as e:
+            print("Error occurred, no content in search_or_watch file: ", e)
+            return data_set_search
         parser = etree.HTMLParser(encoding="utf-8")
         tree = etree.fromstring(html, parser)
         if type == 1:
@@ -190,9 +194,10 @@ def extract_data_file_videos(files, name, type):
         items = tree.xpath('//div[contains(@class, "content-cell") and contains(@class, "mdl-cell") and contains(@class, "mdl-cell--6-col") and contains(@class, "mdl-typography--body-1")]')
         for item in items:
             data_point = {}
-            content = item.xpath('string()').strip().split("<SEP>")
-            time = content.pop()
-            data_point["Time"] = time
+            content = item.xpath(".//br/following-sibling::text()")
+            if (len(content)>=1):
+                time = content.pop()
+                data_point["Time"] = time
             for ref in item.xpath('.//a'):
                 video_regex_result = video_pattern.match(ref.get("href"))
                 if type == 2:
@@ -203,6 +208,8 @@ def extract_data_file_videos(files, name, type):
                         data_point['ads']="no"
                     else:
                         data_point['ads']="yes" 
+                        # if len(content)> 0: 
+                        #     data_point["Time"] = content[1]
                 if video_regex_result:
                     data_point["title"] = ref.xpath('string()')
                     data_point["Video url"] = video_regex_result.group("video_url")
@@ -212,12 +219,19 @@ def extract_data_file_videos(files, name, type):
 
 # get data from csv files
 def csv_extract(files,name,type):
+    df_list= []
     if type == 4:
-        df_likes = pd.read_csv(files.open(name), skiprows= 2)
-        df_list = df_likes[df_likes.columns[0]].tolist()
+        try:
+            df_likes = pd.read_csv(files.open(name), skiprows= 2)
+            df_list = df_likes[df_likes.columns[0]].tolist()
+        except Exception as e:
+            print("Error occurred, no content in likes file: ", e)
     if type == 3:
-        df_sub = pd.read_csv(files.open(name))
-        df_list = df_sub.values.tolist()
+        try:
+            df_sub = pd.read_csv(files.open(name))
+            df_list = df_sub.values.tolist()
+        except Exception as e:
+            print("Error occurred, no content in subscription file: ", e)
     return df_list
 
 
