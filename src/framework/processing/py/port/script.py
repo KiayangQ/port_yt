@@ -181,11 +181,11 @@ def extract_data_file_videos(files, name, type):
         try:
             with files.open(name, 'r') as f:
                 html = f.read()
+                parser = etree.HTMLParser(encoding="utf-8")
+                tree = etree.fromstring(html, parser)
         except Exception as e:
             print("Error occurred, no content in search_or_watch file: ", e)
             return data_set_search
-        parser = etree.HTMLParser(encoding="utf-8")
-        tree = etree.fromstring(html, parser)
         if type == 1:
             video_pattern = re.compile(VIDEO_REGEX_search)
         else:
@@ -242,19 +242,19 @@ def csv_extract(files,name,type):
 def prompt_consent(id, data):
 
     table_title_search = props.Translatable({
-        "en": "search data",
+        "en": "searches",
         # dutch need to be changed
-        "nl": "Inhoud zip bestand"
+        "nl": "zoekt"
     })
 
     table_title_viewings = props.Translatable({
-        "en": "viewing data",
-        "nl": "Log berichten"
+        "en": "viewings",
+        "nl": "bezichtigingen"
     })
 
     table_title_subscription = props.Translatable({
-        "en": "subscription data",
-        "nl": "Log berichten"
+        "en": "subscriptions",
+        "nl": "abonnementen"
     })
 
     
