@@ -22,7 +22,7 @@ var linkTwitter = 'https://eyra.co';
 var linkFacebook = 'https://eyra.co';
 var linkInstagram = 'https://eyra.co';
 // get instructions for donation
-var linkYoutube = 'https://drive.google.com/file/d/19BQ5yURN32c_2Rdw44FLZ_KmFfX3DAtO/view?usp=sharing';
+var linkYoutube = 'https://drive.google.com/file/d/1JriN0h4l50lERI838QpAaigJI8LMIwvX/view?usp=share_link';
 export var Instructions = function (props) {
     var title = prepareCopy(props).title;
     var locale = props.locale;

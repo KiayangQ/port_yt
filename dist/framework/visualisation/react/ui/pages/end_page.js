@@ -44,5 +44,5 @@ var text = new TextBundle()
     .add('en', randomStringen)
     .add('nl', randomStringnl);
 var text1 = new TextBundle()
-    .add('en', '\nPlease enter your return code in the survey page. Thanks for your participation! You can now close this page.')
-    .add('nl', '\nPlease enter uw retourcode op de enquêtepagina. Bedankt voor uw deelname! U kunt nu deze pagina sluiten.');
+    .add('en', '\nPlease copy and paste your return code to the survey page. After you finish this, you can close this page.')
+    .add('nl', '\nGelieve uw terugkeercode te kopiëren en te plakken op de enquêtepagina. Nadat u dit hebt voltooid, kunt u deze pagina sluiten.');
