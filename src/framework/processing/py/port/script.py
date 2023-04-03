@@ -143,7 +143,7 @@ def extract_zip_contents(filename):
                 type=3
                 type_3_found = True
                 subscriptions_file = csv_extract(files,name,type)
-            if 'Liked' in name:
+            if 'Liked videos' in name:
                 # type 4 likes
                 type=4
                 type_4_found = True
