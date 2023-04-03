@@ -84,8 +84,8 @@ def render_donation_page(platform, body, progress):
 
 def retry_confirmation(platform):
     text = props.Translatable({
-        "en": f"Unfortunately, Your data package does not contain the files we need or we cannot process your {platform} file. Try again or select the correct file. The zipped file is often named as takeout-xxxxx.zip",
-        "nl": f"Helaas, Uw datapakket bevat niet de bestanden die we nodig hebben of kunnen we uw {platform} bestand niet verwerken. Probeer het opnieuw of selecteer het juiste bestand. Het gecomprimeerde bestand wordt vaak genoemd als takeout-xxxxx.zip."
+        "en": f"Unfortunately, Your data package does not contain the files we need or we cannot process your {platform} file. Please make sure that the default language for your browser is Dutch or English or try again to select a different file. The zipped file is often named as takeout-xxxxx.zip",
+        "nl": f"Helaas, Uw datapakket bevat niet de bestanden die we nodig hebben of kunnen we uw {platform} bestand niet verwerken. Zorg er alsjeblieft voor dat de standaardtaal voor je browser Nederlands of Engels is, of probeer opnieuw een ander bestand te selecteren. Het gecomprimeerde bestand wordt vaak genoemd als takeout-xxxxx.zip."
     })
     ok = props.Translatable({
         "en": "Try again",
@@ -120,32 +120,36 @@ def extract_zip_contents(filename):
     except zipfile.error:
         return "invalid"
     names= []
-    count = 0
+    type_1_found = False
+    type_2_found = False
+    type_3_found = False
+    type_4_found = False
     for name in files.namelist():
         names.append(name)
         # find search history file
         if re.findall('abonnementen|zoekgeschiedenis|kijkgeschiedenis|subscriptions|search-history|watch-history|Liked videos',name):
             if ('zoekgeschiedenis' in name )or('search-history'in name):
                 # type 1 = search history
-                type = 1
-                count+=1
+                type=1
+                type_1_found = True
                 search_file = extract_data_file_videos(files,name,type)
             if ('kijkgeschiedenis' in name )or('watch-history' in name):
                 # type 2 = watch history
-                type = 2
-                count+=1
+                type=2
+                type_2_found = True
                 watch_file = extract_data_file_videos(files,name,type)
             if ('abonnementen' in name )or('subscriptions' in name):    
                 # type 3 = subscriptions
-                type = 3
-                count+=1
+                type=3
+                type_3_found = True
                 subscriptions_file = csv_extract(files,name,type)
             if 'Liked' in name:
                 # type 4 likes
-                type = 4
-                count+=1
+                type=4
+                type_4_found = True
                 liked_file = csv_extract(files,name,type)
-    if count==4:
+
+    if type_2_found==True and type_4_found==True:
         new_list_watch = []
         for d in watch_file:
             temp_dict = d.copy()
@@ -160,12 +164,24 @@ def extract_zip_contents(filename):
                         break
             new_list_watch.append(temp_dict)   
 
-        # put all lists together
-        data_out = [search_file,new_list_watch,subscriptions_file]
-
-        return data_out
+    elif type_2_found==True and type_4_found==False:
+            new_list_watch = []
+            for d in watch_file:
+                temp_dict = d.copy()
+                temp_dict['likes'] = 0
+                new_list_watch.append(temp_dict)
     else:
         return "invalid"
+     # handle missing files
+    if type_1_found==False:
+        search_file = []
+    if type_3_found==False:
+        subscriptions_file = []
+        # put all lists together
+    data_out = [search_file,new_list_watch,subscriptions_file]
+
+    return data_out
+
 
 
 

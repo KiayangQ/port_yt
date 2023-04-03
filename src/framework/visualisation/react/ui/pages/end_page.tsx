@@ -76,5 +76,5 @@ const text = new TextBundle()
   .add('nl', randomStringnl)
 
 const text1 = new TextBundle()
-  .add('en', '\nPlease copy and paste your return code to the survey page. After you finish this, you can close this page.')
-  .add('nl', '\nGelieve uw terugkeercode te kopiëren en te plakken op de enquêtepagina. Nadat u dit hebt voltooid, kunt u deze pagina sluiten.')
+  .add('en', '\nPlease copy and paste your return code to the survey page. After you finish this, the data donation is complete and you can close this page.')
+  .add('nl', '\nGelieve uw terugkeercode te kopiëren en te plakken op de enquêtepagina. Nadat je hiermee klaar bent, is de gegevensdonatie voltooid en kun je deze pagina sluiten.')

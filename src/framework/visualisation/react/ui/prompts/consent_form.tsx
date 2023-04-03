@@ -2,7 +2,7 @@ import { assert, Weak } from '../../../../helpers'
 import { PropsUITable, PropsUITableBody, PropsUITableCell, PropsUITableHead, PropsUITableRow } from '../../../../types/elements'
 import { PropsUIPromptConsentForm, PropsUIPromptConsentFormTable } from '../../../../types/prompts'
 import { Table } from '../elements/table'
-import { LabelButton, PrimaryButton } from '../elements/button'
+import { PrimaryButton } from '../elements/button'
 import { BodyLarge, Title4 } from '../elements/text'
 import TextBundle from '../../../../text_bundle'
 import { Translator } from '../../../../translator'
@@ -23,7 +23,7 @@ export const ConsentForm = (props: Props): JSX.Element => {
   const tablesOut = React.useRef<Array<PropsUITable & TableContext>>(tablesIn.current)
 
   const { locale, resolve } = props
-  const { description, donateQuestion, donateButton, cancelButton } = prepareCopy(props)
+  const { description, donateQuestion, donateButton } = prepareCopy(props)
 
   function rowCell (dataFrame: any, column: string, row: number): PropsUITableCell {
     const text = String(dataFrame[column][`${row}`])
@@ -104,9 +104,9 @@ export const ConsentForm = (props: Props): JSX.Element => {
     resolve?.({ __type__: 'PayloadJSON', value })
   }
 
-  function handleCancel (): void {
-    resolve?.({ __type__: 'PayloadFalse', value: false })
-  }
+  // function handleCancel (): void {
+  //   resolve?.({ __type__: 'PayloadFalse', value: false })
+  // }
 
   function serializeConsentData (): string {
     const array = serializeTables().concat(serializeMetaData())
@@ -155,7 +155,7 @@ export const ConsentForm = (props: Props): JSX.Element => {
           <BodyLarge margin='' text={donateQuestion} />
           <div className='flex flex-row gap-4 mt-4 mb-4'>
             <PrimaryButton label={donateButton} onClick={handleDonate} color='bg-success text-white' />
-            <LabelButton label={cancelButton} onClick={handleCancel} color='text-grey1' />
+            {/* <LabelButton label={cancelButton} onClick={handleCancel} color='text-grey1' /> */}
           </div>
         </div>
       </div>
@@ -167,15 +167,15 @@ interface Copy {
   description: string
   donateQuestion: string
   donateButton: string
-  cancelButton: string
+  // cancelButton: string
 }
 
 function prepareCopy ({ locale }: Props): Copy {
   return {
     description: Translator.translate(description, locale),
     donateQuestion: Translator.translate(donateQuestionLabel, locale),
-    donateButton: Translator.translate(donateButtonLabel, locale),
-    cancelButton: Translator.translate(cancelButtonLabel, locale)
+    donateButton: Translator.translate(donateButtonLabel, locale)
+    // cancelButton: Translator.translate(cancelButtonLabel, locale)
   }
 }
 
@@ -187,10 +187,10 @@ const donateButtonLabel = new TextBundle()
   .add('en', 'Yes, donate')
   .add('nl', 'Ja, doneer')
 
-const cancelButtonLabel = new TextBundle()
-  .add('en', 'No')
-  .add('nl', 'Nee')
+// const cancelButtonLabel = new TextBundle()
+//   .add('en', '')
+//   .add('nl', '')
 
 const description = new TextBundle()
-  .add('en', 'Determine whether you would like to donate the data below. Carefully check the data and adjust when required. With your donation you contribute to the previously described research. Thank you in advance.')
-  .add('nl', 'Bepaal of u de onderstaande gegevens wilt doneren. Bekijk de gegevens zorgvuldig en pas zo nodig aan. Met uw donatie draagt u bij aan het eerder beschreven onderzoek. Alvast hartelijk dank.')
+  .add('en', 'Determine whether you would like to donate the data by clicking the green button at the bottom of this page. Carefully check the data and adjust when required. With your donation you contribute to the previously described research. Thank you in advance.')
+  .add('nl', 'Bepaal of je de gegevens wilt doneren door op de groene knop onderaan deze pagina te klikken. Bekijk de gegevens zorgvuldig en pas zo nodig aan. Met uw donatie draagt u bij aan het eerder beschreven onderzoek. Alvast hartelijk dank.')
