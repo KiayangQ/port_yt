@@ -12,7 +12,7 @@ var __assign = (this && this.__assign) || function () {
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { assert } from '../../../../helpers';
 import { Table } from '../elements/table';
-import { LabelButton, PrimaryButton } from '../elements/button';
+import { PrimaryButton } from '../elements/button';
 import { BodyLarge, Title4 } from '../elements/text';
 import TextBundle from '../../../../text_bundle';
 import { Translator } from '../../../../translator';
@@ -23,7 +23,7 @@ export var ConsentForm = function (props) {
     var metaTables = React.useRef(parseTables(props.metaTables));
     var tablesOut = React.useRef(tablesIn.current);
     var locale = props.locale, resolve = props.resolve;
-    var _a = prepareCopy(props), description = _a.description, donateQuestion = _a.donateQuestion, donateButton = _a.donateButton, cancelButton = _a.cancelButton;
+    var _a = prepareCopy(props), description = _a.description, donateQuestion = _a.donateQuestion, donateButton = _a.donateButton;
     function rowCell(dataFrame, column, row) {
         var text = String(dataFrame[column]["".concat(row)]);
         return { __type__: 'PropsUITableCell', text: text };
@@ -91,9 +91,9 @@ export var ConsentForm = function (props) {
         var value = serializeConsentData();
         resolve === null || resolve === void 0 ? void 0 : resolve({ __type__: 'PayloadJSON', value: value });
     }
-    function handleCancel() {
-        resolve === null || resolve === void 0 ? void 0 : resolve({ __type__: 'PayloadFalse', value: false });
-    }
+    // function handleCancel (): void {
+    //   resolve?.({ __type__: 'PayloadFalse', value: false })
+    // }
     function serializeConsentData() {
         var array = serializeTables().concat(serializeMetaData());
         return JSON.stringify(array);
@@ -132,15 +132,15 @@ export var ConsentForm = function (props) {
         var values = row.cells.map(function (cell) { return cell.text; });
         return _.fromPairs(_.zip(keys, values));
     }
-    return (_jsxs(_Fragment, { children: [_jsx(BodyLarge, { text: description }), _jsxs("div", __assign({ className: 'flex flex-col gap-8' }, { children: [tablesIn.current.map(function (table) { return renderTable(table); }), _jsxs("div", { children: [_jsx(BodyLarge, { margin: '', text: donateQuestion }), _jsxs("div", __assign({ className: 'flex flex-row gap-4 mt-4 mb-4' }, { children: [_jsx(PrimaryButton, { label: donateButton, onClick: handleDonate, color: 'bg-success text-white' }), _jsx(LabelButton, { label: cancelButton, onClick: handleCancel, color: 'text-grey1' })] }))] })] }))] }));
+    return (_jsxs(_Fragment, { children: [_jsx(BodyLarge, { text: description }), _jsxs("div", __assign({ className: 'flex flex-col gap-8' }, { children: [tablesIn.current.map(function (table) { return renderTable(table); }), _jsxs("div", { children: [_jsx(BodyLarge, { margin: '', text: donateQuestion }), _jsx("div", __assign({ className: 'flex flex-row gap-4 mt-4 mb-4' }, { children: _jsx(PrimaryButton, { label: donateButton, onClick: handleDonate, color: 'bg-success text-white' }) }))] })] }))] }));
 };
 function prepareCopy(_a) {
     var locale = _a.locale;
     return {
         description: Translator.translate(description, locale),
         donateQuestion: Translator.translate(donateQuestionLabel, locale),
-        donateButton: Translator.translate(donateButtonLabel, locale),
-        cancelButton: Translator.translate(cancelButtonLabel, locale)
+        donateButton: Translator.translate(donateButtonLabel, locale)
+        // cancelButton: Translator.translate(cancelButtonLabel, locale)
     };
 }
 var donateQuestionLabel = new TextBundle()
@@ -149,9 +149,9 @@ var donateQuestionLabel = new TextBundle()
 var donateButtonLabel = new TextBundle()
     .add('en', 'Yes, donate')
     .add('nl', 'Ja, doneer');
-var cancelButtonLabel = new TextBundle()
-    .add('en', 'No')
-    .add('nl', 'Nee');
+// const cancelButtonLabel = new TextBundle()
+//   .add('en', '')
+//   .add('nl', '')
 var description = new TextBundle()
-    .add('en', 'Determine whether you would like to donate the data below. Carefully check the data and adjust when required. With your donation you contribute to the previously described research. Thank you in advance.')
-    .add('nl', 'Bepaal of u de onderstaande gegevens wilt doneren. Bekijk de gegevens zorgvuldig en pas zo nodig aan. Met uw donatie draagt u bij aan het eerder beschreven onderzoek. Alvast hartelijk dank.');
+    .add('en', 'Determine whether you would like to donate the data by clicking the green button at the bottom of this page. Carefully check the data and adjust when required. With your donation you contribute to the previously described research. Thank you in advance.')
+    .add('nl', 'Bepaal of je de gegevens wilt doneren door op de groene knop onderaan deze pagina te klikken. Bekijk de gegevens zorgvuldig en pas zo nodig aan. Met uw donatie draagt u bij aan het eerder beschreven onderzoek. Alvast hartelijk dank.');
